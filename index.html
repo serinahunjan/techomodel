@@ -2,36 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TechMind - Home</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- ✅ FIXED CSS PATH -->
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
   <div class="page-container">
 
-    <!-- Header -->
+    <!-- HEADER -->
     <header class="top-header">
       <div class="logo">
         <div class="logo-container">
-          <img src="Images/logo.jpg" alt="TechMind Logo">
+          <!-- ✅ FIXED IMAGE PATH -->
+          <img src="/static/Images/logo.jpg" alt="TechMind Logo">
         </div>
       </div>
-      <a href="login.html" class="login-btn">Login</a>
+
+      <!-- ✅ FIXED LINK -->
+      <a href="/login" class="login-btn">Login</a>
     </header>
 
-    <!-- Navbar -->
+    <!-- NAVBAR -->
     <nav class="navbar">
-      <a href="index.html" class="active">Home</a>
+      <a href="/" class="active">Home</a>
       <span>|</span>
-      <a href="assessment.html">Assessment</a>
+      <a href="/assessment">Assessment</a>
       <span>|</span>
-      <a href="results.html">Results</a>
+      <a href="/results">Results</a>
       <span>|</span>
-      <a href="journal.html">Journal</a>
+      <a href="/journal">Journal</a>
     </nav>
 
-    <!-- Main Content -->
+    <!-- MAIN CONTENT -->
     <main class="content-section home-section">
 
       <div class="card home-card">
@@ -48,9 +53,10 @@
           based on three key dimensions: overload, invasion, and complexity.
         </p>
 
+        <!-- ✅ FIXED BUTTON LINKS -->
         <div class="home-buttons">
-          <a href="assessment.html" class="primary-btn">Start Assessment</a>
-          <a href="results.html" class="secondary-btn">View Results</a>
+          <a href="/assessment" class="primary-btn">Start Assessment</a>
+          <a href="/results" class="secondary-btn">View Results</a>
         </div>
 
       </div>
