@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from db import (
     init_db,
     save_assessment,
@@ -24,6 +25,9 @@ app.add_middleware(
 
 init_db()
 
+# serves CSS, JS, images, and other static files
+app.mount("/static", StaticFiles(directory="."), name="static")
+
 
 def calculate_dimensions_30(answers: list[int]) -> dict:
     overload = sum(answers[0:10])      # Q1-Q10
@@ -37,34 +41,8 @@ def calculate_dimensions_30(answers: list[int]) -> dict:
     }
 
 
-@app.get("/")
-def home():
-    return FileResponse("index.html")
-
-@app.get("/login")
-def login_page():
-    return FileResponse("login.html")
-
-@app.get("/assessment")
-def assessment_page():
-    return FileResponse("assessment.html")
-
-@app.get("/results")
-def results_page():
-    return FileResponse("results.html")
-
-@app.get("/journal")
-def journal_page():
-    return FileResponse("journal.html")
-
-
-@app.post("/submit-survey")
-def submit_survey(data: dict):
-    return {"received_answers": data}
-
 def get_primary_dimension(dimensions: dict) -> str:
     max_score = max(dimensions.values())
-
     highest = [name for name, score in dimensions.items() if score == max_score]
 
     if len(highest) == 1:
@@ -72,9 +50,8 @@ def get_primary_dimension(dimensions: dict) -> str:
 
     return "mixed"
 
-def get_personalised_advice(primary_dimension: str, category: str) -> dict:
 
-    # OVERLOAD
+def get_personalised_advice(primary_dimension: str, category: str) -> dict:
     if primary_dimension == "overload":
         if category == "low":
             return {
@@ -82,22 +59,19 @@ def get_personalised_advice(primary_dimension: str, category: str) -> dict:
                 "cause": "You occasionally experience pressure from digital tasks, but it is still manageable.",
                 "advice": "Try keeping a simple daily task list and avoid multitasking when possible to stay focused."
             }
-
         elif category == "medium":
             return {
                 "title": "Moderate Techno-Overload",
                 "cause": "You may be dealing with too many digital demands such as messages, deadlines, and notifications.",
                 "advice": "Try time-blocking your tasks, turning off non-essential notifications, and focusing on one task at a time."
             }
-
-        else:  # high
+        else:
             return {
                 "title": "High Techno-Overload",
                 "cause": "You are likely overwhelmed by constant digital demands and information overload.",
                 "advice": "Reduce your workload where possible, take structured breaks, and create strict boundaries around when you engage with technology."
             }
 
-    # INVASION
     elif primary_dimension == "invasion":
         if category == "low":
             return {
@@ -105,22 +79,19 @@ def get_personalised_advice(primary_dimension: str, category: str) -> dict:
                 "cause": "Technology slightly overlaps with your personal time, but it is mostly under control.",
                 "advice": "Try maintaining clear boundaries between work/study and personal time."
             }
-
         elif category == "medium":
             return {
                 "title": "Moderate Techno-Invasion",
                 "cause": "You may find it difficult to switch off from technology, even during rest time.",
-                "advice": "Set 'offline hours', reduce evening screen use, and avoid checking notifications late at night."
+                "advice": "Set offline hours, reduce evening screen use, and avoid checking notifications late at night."
             }
-
-        else:  # high
+        else:
             return {
                 "title": "High Techno-Invasion",
                 "cause": "Technology is significantly interfering with your personal life and rest time.",
                 "advice": "Create strict digital boundaries, use app limits, and schedule regular screen-free periods to recover."
             }
 
-    # COMPLEXITY
     elif primary_dimension == "complexity":
         if category == "low":
             return {
@@ -128,29 +99,64 @@ def get_personalised_advice(primary_dimension: str, category: str) -> dict:
                 "cause": "You occasionally find digital systems slightly confusing.",
                 "advice": "Take your time learning tools and focus on one system at a time."
             }
-
         elif category == "medium":
             return {
                 "title": "Moderate Techno-Complexity",
                 "cause": "You may feel stressed when learning or adapting to new technologies.",
                 "advice": "Break tasks into smaller steps, use tutorials, and avoid switching between too many platforms."
             }
-
-        else:  # high
+        else:
             return {
                 "title": "High Techno-Complexity",
                 "cause": "You are likely experiencing stress due to complex or difficult-to-use systems.",
                 "advice": "Simplify your digital environment, use familiar tools, and allow extra time to learn new systems gradually."
             }
 
-    # MIXED
     else:
         return {
             "title": "Mixed Technostress Profile",
             "cause": "Your stress is spread across multiple areas such as overload, invasion, and complexity.",
             "advice": "Try combining strategies: reduce workload, set boundaries with technology, and simplify your digital tasks."
         }
-    
+
+
+# ---------- PAGE ROUTES ----------
+@app.get("/")
+def home():
+    return FileResponse("index.html")
+
+
+@app.get("/login")
+def login_page():
+    return FileResponse("login.html")
+
+
+@app.get("/signup")
+def signup_page():
+    return FileResponse("signup.html")
+
+
+@app.get("/assessment")
+def assessment_page():
+    return FileResponse("assessment.html")
+
+
+@app.get("/results")
+def results_page():
+    return FileResponse("results.html")
+
+
+@app.get("/journal")
+def journal_page():
+    return FileResponse("journal.html")
+
+
+# ---------- API ROUTES ----------
+@app.post("/submit-survey")
+def submit_survey(data: dict):
+    return {"received_answers": data}
+
+
 @app.post("/score")
 def calculate_score(data: dict):
     if "answers" not in data:
@@ -176,6 +182,7 @@ def calculate_score(data: dict):
 
     primary_dimension = get_primary_dimension(dims)
     advice_info = get_personalised_advice(primary_dimension, category)
+
     assessment_id = save_assessment(total_score=total, category=category)
     save_answers(assessment_id, answers)
     save_breakdown(
@@ -196,6 +203,7 @@ def calculate_score(data: dict):
         "advice_text": advice_info["advice"]
     }
 
+
 @app.get("/latest")
 def latest():
     latest_row = get_latest_assessment()
@@ -208,10 +216,7 @@ def save_demo():
     return {"saved_assessment_id": assessment_id}
 
 
-# =========================
-# SCREEN TIME JOURNAL
-# =========================
-
+# ---------- SCREEN TIME JOURNAL ----------
 @app.post("/screen-time")
 def add_screen_time(data: dict):
     if "user_email" not in data or "log_date" not in data or "hours_used" not in data:
@@ -255,6 +260,7 @@ def remove_screen_time(data: dict):
         return {"error": "Entry not found"}
 
     return {"message": "Entry deleted successfully"}
+
 
 import os
 
