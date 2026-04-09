@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from db import (
     init_db,
     save_assessment,
@@ -38,7 +39,23 @@ def calculate_dimensions_30(answers: list[int]) -> dict:
 
 @app.get("/")
 def home():
-    return {"message": "backend is running successfully"}
+    return FileResponse("index.html")
+
+@app.get("/login")
+def login_page():
+    return FileResponse("login.html")
+
+@app.get("/assessment")
+def assessment_page():
+    return FileResponse("assessment.html")
+
+@app.get("/results")
+def results_page():
+    return FileResponse("results.html")
+
+@app.get("/journal")
+def journal_page():
+    return FileResponse("journal.html")
 
 
 @app.post("/submit-survey")
