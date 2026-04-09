@@ -25,7 +25,7 @@ app.add_middleware(
 
 init_db()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 
 def calculate_dimensions_30(answers: list[int]) -> dict:
