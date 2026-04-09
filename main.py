@@ -25,14 +25,13 @@ app.add_middleware(
 
 init_db()
 
-# serves CSS, JS, images, and other static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 
 def calculate_dimensions_30(answers: list[int]) -> dict:
-    overload = sum(answers[0:10])      # Q1-Q10
-    invasion = sum(answers[10:20])     # Q11-Q20
-    complexity = sum(answers[20:30])   # Q21-Q30
+    overload = sum(answers[0:10])
+    invasion = sum(answers[10:20])
+    complexity = sum(answers[20:30])
 
     return {
         "overload": overload,
@@ -120,7 +119,6 @@ def get_personalised_advice(primary_dimension: str, category: str) -> dict:
         }
 
 
-# ---------- PAGE ROUTES ----------
 @app.get("/")
 def home():
     return FileResponse("index.html")
@@ -151,7 +149,6 @@ def journal_page():
     return FileResponse("journal.html")
 
 
-# ---------- API ROUTES ----------
 @app.post("/submit-survey")
 def submit_survey(data: dict):
     return {"received_answers": data}
@@ -216,7 +213,6 @@ def save_demo():
     return {"saved_assessment_id": assessment_id}
 
 
-# ---------- SCREEN TIME JOURNAL ----------
 @app.post("/screen-time")
 def add_screen_time(data: dict):
     if "user_email" not in data or "log_date" not in data or "hours_used" not in data:
