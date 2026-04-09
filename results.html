@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechMind - Results</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-container">
+    <header class="top-header">
+      <div class="logo">
+        <div class="logo-container">
+          <img src="Images/logo.jpg" alt="TechMind Logo">
+        </div>
+      </div>
+      <a href="login.html" class="login-btn">Login</a>
+    </header>
+
+    <nav class="navbar">
+      <a href="index.html">Home</a>
+      <span>|</span>
+      <a href="assessment.html">Assessment</a>
+      <span>|</span>
+      <a href="results.html" class="active">Results</a>
+      <span>|</span>
+      <a href="journal.html">Journal</a>
+    </nav>
+
+    <main class="content-section">
+      <div class="card results-card">
+        <h1 class="page-title">Your Technostress Results</h1>
+        <p class="page-text">
+          This page shows your overall score, your three technostress dimensions, and personalised advice.
+        </p>
+
+        <div id="results-content"></div>
+
+        <div class="results-actions">
+          <a href="assessment.html" class="primary-btn link-btn">Retake Assessment</a>
+          <a href="index.html" class="secondary-btn link-btn">Back to Home</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const resultsContent = document.getElementById("results-content");
+    const stored = localStorage.getItem("technomindResult");
+
+    if (!stored) {
+      resultsContent.innerHTML = `
+        <p class="no-result-text">
+          No result found yet. Please complete the assessment first.
+        </p>
+      `;
+    } else {
+      const data = JSON.parse(stored);
+
+      resultsContent.innerHTML = `
+        <div class="result-summary">
+          <div class="result-box">
+            <h2>Overall Score</h2>
+            <p>${data.score}</p>
+          </div>
+
+          <div class="result-box">
+            <h2>Category</h2>
+            <p>${data.category}</p>
+          </div>
+        </div>
+
+        <div class="dimension-list">
+          <div class="dimension-item">
+            <span class="dimension-label">Overload</span>
+            <span class="dimension-value">${data.dimensions.overload}</span>
+          </div>
+
+          <div class="dimension-item">
+            <span class="dimension-label">Invasion</span>
+            <span class="dimension-value">${data.dimensions.invasion}</span>
+          </div>
+
+          <div class="dimension-item">
+            <span class="dimension-label">Complexity</span>
+            <span class="dimension-value">${data.dimensions.complexity}</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px; background: #faf8fc;">
+          <h2 class="question-title" style="text-align:center; margin-bottom: 15px;">
+            Personalised Advice
+          </h2>
+
+          <p class="page-text" style="margin-bottom: 12px;">
+            <strong>${data.advice_title || "Advice not available yet"}</strong>
+          </p>
+
+          <p class="page-text" style="margin-bottom: 12px;">
+            <strong>Possible Cause:</strong>
+            ${data.advice_cause || "No cause available."}
+          </p>
+
+          <p class="page-text" style="margin-bottom: 0;">
+            <strong>Suggested Advice:</strong>
+            ${data.advice_text || "No advice available."}
+          </p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechMind - Digital Journal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <script>
+    const user = JSON.parse(localStorage.getItem("technomindUser"));
+
+    if (!user) {
+      alert("Please login first.");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="page-container">
+    <header class="top-header">
+      <div class="logo">
+        <div class="logo-container">
+          <img src="Images/logo.jpg" alt="TechMind Logo">
+        </div>
+      </div>
+      <a href="login.html" class="login-btn">Login</a>
+    </header>
+
+    <nav class="navbar">
+      <a href="index.html">Home</a>
+      <span>|</span>
+      <a href="assessment.html">Assessment</a>
+      <span>|</span>
+      <a href="results.html">Results</a>
+      <span>|</span>
+      <a href="journal.html" class="active">Journal</a>
+    </nav>
+
+    <main class="content-section">
+      <div class="card" style="max-width: 700px;">
+        <h1 class="page-title">Daily Digital Journal</h1>
+        <p class="page-text">
+          Log how many hours you used your phone today and keep track across the week.
+        </p>
+
+        <form id="screen-time-form" class="login-form">
+          <label class="form-label">Date</label>
+          <input type="date" id="logDate" class="form-input" required />
+
+          <label class="form-label">Hours used today</label>
+          <input type="number" id="hoursUsed" class="form-input" step="0.1" min="0" max="24" required />
+
+          <label class="form-label">Notes (optional)</label>
+          <textarea id="note" class="form-input" rows="4" placeholder="Example: Lots of scrolling, too many notifications, tired after studying..."></textarea>
+
+          <button type="submit" class="primary-btn submit-btn">Save Entry</button>
+        </form>
+
+        <p id="screen-time-message" style="text-align:center; margin-top:16px; color:#555;"></p>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+
+        <h2 class="question-title" style="text-align:center; margin-bottom: 20px;">Your Recent Entries</h2>
+        <div id="logs-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("technomindUser"));
+    const logDateInput = document.getElementById("logDate");
+    const today = new Date().toISOString().split("T")[0];
+    logDateInput.value = today;
+
+    async function deleteEntry(logDate) {
+      const confirmed = confirm(`Delete entry for ${logDate}?`);
+
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/screen-time", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user_email: currentUser.email,
+            log_date: logDate
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          alert(data.error || "Could not delete entry.");
+          return;
+        }
+
+        alert("Entry deleted successfully.");
+        loadLogs();
+      } catch (error) {
+        console.error("Delete error:", error);
+        alert("Could not connect to the backend.");
+      }
+    }
+
+    async function loadLogs() {
+      const logsContainer = document.getElementById("logs-container");
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/screen-time/${encodeURIComponent(currentUser.email)}`);
+        const data = await response.json();
+
+        if (!data.logs || data.logs.length === 0) {
+          logsContainer.innerHTML = `
+            <p class="no-result-text" style="text-align:center;">
+              No journal entries yet.
+            </p>
+          `;
+          return;
+        }
+
+        logsContainer.innerHTML = data.logs.map(log => `
+          <div class="dimension-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span class="dimension-label">${log.log_date}</span>
+                ${log.note ? `<p style="margin:0; color:#666;">${log.note}</p>` : ""}
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="dimension-value">${log.hours_used} hrs</span>
+                <button
+                  onclick="deleteEntry('${log.log_date}')"
+                  style="background:#eee; border:none; padding:8px 14px; border-radius:999px; cursor:pointer;"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join("");
+      } catch (error) {
+        logsContainer.innerHTML = `
+          <p class="no-result-text" style="text-align:center;">
+            Could not load journal entries.
+          </p>
+        `;
+        console.error("Load logs error:", error);
+      }
+    }
+
+    document.getElementById("screen-time-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const logDate = document.getElementById("logDate").value;
+      const hoursUsed = document.getElementById("hoursUsed").value;
+      const note = document.getElementById("note").value.trim();
+      const message = document.getElementById("screen-time-message");
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/screen-time", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user_email: currentUser.email,
+            log_date: logDate,
+            hours_used: hoursUsed,
+            note: note
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          message.textContent = data.error || "There was a problem saving the entry.";
+          return;
+        }
+
+        message.textContent = data.message;
+        document.getElementById("hoursUsed").value = "";
+        document.getElementById("note").value = "";
+        loadLogs();
+      } catch (error) {
+        message.textContent = "Could not connect to the backend.";
+        console.error(error);
+      }
+    });
+
+    loadLogs();
+  </script>
+</body>
+</html>

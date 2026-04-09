@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechMind - Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-container">
+    <header class="top-header">
+      <div class="logo">
+        <div class="logo-container">
+          <img src="Images/logo.jpg" alt="TechMind Logo">
+        </div>
+      </div>
+      <a href="index.html" class="secondary-btn link-btn">Home</a>
+    </header>
+
+    <nav class="navbar">
+      <a href="index.html">Home</a>
+      <span>|</span>
+      <a href="assessment.html">Assessment</a>
+      <span>|</span>
+      <a href="results.html">Results</a>
+      <span>|</span>
+      <a href="journal.html">Journal</a>
+    </nav>
+
+    <main class="content-section">
+      <div class="card" style="max-width: 500px;">
+        <h1 class="page-title">Login</h1>
+        <p class="page-text">Enter your details to continue.</p>
+
+        <form id="login-form" class="login-form">
+          <!-- EMAIL -->
+          <label class="form-label">Email</label>
+          <input type="email" id="email" class="form-input" required />
+
+          <!-- PASSWORD -->
+          <label class="form-label">Password</label>
+          <input type="password" id="password" class="form-input" required />
+
+          <!-- LOGIN BUTTON -->
+          <button type="submit" class="primary-btn submit-btn">
+            Continue
+          </button>
+        </form>
+
+        <!-- SIGN UP LINK -->
+        <p style="text-align:center; margin-top: 20px;">
+          Don’t have an account?
+          <a href="signup.html" style="color:#c58be8; font-weight:600;">
+            Sign up
+          </a>
+        </p>
+
+      </div>
+    </main>
+  </div>
+
+<script>
+  document.getElementById("login-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (email === "" || password === "") {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    // fake login (for now)
+    localStorage.setItem("technomindUser", JSON.stringify({ email }));
+
+    // redirect after login
+    window.location.href = "assessment.html";
+  });
+</script>
+</body>
+</html>

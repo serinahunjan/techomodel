@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechMind - Assessment</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-container">
+    <header class="top-header">
+      <div class="logo">
+        <div class="logo-container">
+          <img src="Images/logo.jpg" alt="TechMind Logo">
+        </div>
+      </div>
+      <a href="login.html" class="login-btn">Login</a>
+    </header>
+
+    <nav class="navbar">
+      <a href="index.html">Home</a>
+      <span>|</span>
+      <a href="assessment.html" class="active">Assessment</a>
+      <span>|</span>
+      <a href="results.html">Results</a>
+      <span>|</span>
+      <a href="journal.html">Journal</a>
+    </nav>
+
+    <main class="content-section">
+      <div class="card">
+        <h1 class="page-title">Technostress Assessment</h1>
+        <p class="page-text">
+          Answer each question on a scale from 1 to 5.
+        </p>
+
+        <form id="assessment-form">
+          <div id="questions-container"></div>
+
+          <button type="submit" class="primary-btn submit-btn">
+            Submit Assessment
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+ <script>
+  const questions = [
+    "I feel that technology increases my workload.",
+    "I feel pressure to respond to digital communication quickly.",
+    "Technology makes me feel rushed during tasks.",
+    "I feel overwhelmed by the number of digital tools I use.",
+    "Using technology often adds to my daily stress.",
+    "Technology makes me feel like I am always available.",
+    "I find it hard to disconnect from technology.",
+    "Digital communication interrupts my personal time.",
+    "Technology blurs the boundary between study and rest.",
+    "I feel invaded by technology in my private life.",
+    "I find new technologies difficult to learn.",
+    "I need extra time to understand some systems.",
+    "Technology sometimes feels too complicated for me.",
+    "I feel confused when using unfamiliar digital tools.",
+    "I struggle when systems are updated or changed.",
+    "I need help when learning some digital platforms.",
+    "Technical problems make me feel stressed.",
+    "I worry about using some systems incorrectly.",
+    "Technology can feel mentally demanding.",
+    "I feel less confident when digital tasks are complex.",
+    "I feel pressured by constant notifications.",
+    "I have too many digital tasks to manage at once.",
+    "Technology makes multitasking harder for me.",
+    "I feel mentally overloaded by online demands.",
+    "I feel stressed by frequent emails or messages.",
+    "Technology interrupts my focus too often.",
+    "Digital systems sometimes feel intrusive.",
+    "I feel dependent on technology to keep up.",
+    "I feel exhausted after heavy technology use.",
+    "Technology contributes to my daily stress levels."
+  ];
+
+  const scaleLabels = [
+    { value: 1, text: "Strongly Disagree" },
+    { value: 2, text: "Disagree" },
+    { value: 3, text: "Neutral" },
+    { value: 4, text: "Agree" },
+    { value: 5, text: "Strongly Agree" }
+  ];
+
+  const container = document.getElementById("questions-container");
+
+  questions.forEach((question, index) => {
+    const questionNumber = index + 1;
+
+    const block = document.createElement("div");
+    block.className = "question-block";
+
+    let optionsHTML = "";
+    scaleLabels.forEach(option => {
+      optionsHTML += `
+        <label class="option-pill">
+          <input type="radio" name="q${questionNumber}" value="${option.value}" required />
+          <span>${option.text}</span>
+        </label>
+      `;
+    });
+
+    block.innerHTML = `
+      <h2 class="question-title">Question ${questionNumber}</h2>
+      <p class="question-text">${question}</p>
+      <div class="options-row">
+        ${optionsHTML}
+      </div>
+    `;
+
+    container.appendChild(block);
+  });
+
+  document.getElementById("assessment-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const answers = [];
+
+    for (let i = 1; i <= 30; i++) {
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+
+      if (!selected) {
+        alert("Please answer all questions before submitting.");
+        return;
+      }
+
+      answers.push(Number(selected.value));
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/score", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ answers: answers })
+      });
+
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
+
+      const data = await response.json();
+
+      localStorage.setItem("technomindResult", JSON.stringify(data));
+      window.location.href = "results.html";
+    } catch (error) {
+      console.error("Error submitting assessment:", error);
+      alert("There was a problem submitting the assessment.");
+    }
+  });
+</script>
+</body>
+</html>
