@@ -26,7 +26,7 @@ app.add_middleware(
 init_db()
 
 # serves CSS, JS, images, and other static files
-app.mount("/static", StaticFiles(directory="."), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def calculate_dimensions_30(answers: list[int]) -> dict:
