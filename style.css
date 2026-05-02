@@ -159,7 +159,7 @@ body {
 
 .question-title {
   font-size: 22px;
-  color: #444;
+  color: #c58be8;
   margin-bottom: 10px;
 }
 
@@ -353,3 +353,112 @@ body {
   width: 140px;      /* make image bigger than container */
   height: auto;
 }
+
+/* Enhanced results page */
+.score-box,
+.category-box {
+  min-width: 260px;
+}
+
+.big-score {
+  font-size: 46px !important;
+  line-height: 1;
+}
+
+.category-value {
+  font-size: 34px !important;
+  font-weight: bold;
+  line-height: 1.1;
+}
+
+.result-note {
+  display: block;
+  margin-top: 8px;
+  color: #777;
+  font-size: 14px;
+}
+
+.result-explainer {
+  max-width: 700px;
+  margin: 0 auto 24px auto;
+  background: #faf8fc;
+  border: 1px solid #f0e2f7;
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+
+.chart-card {
+  margin: 0 auto 30px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px #f0e2f7;
+}
+
+.chart-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#scoreChart {
+  width: 100% !important;
+  max-height: 340px;
+}
+
+.enhanced-dimensions {
+  max-width: 700px;
+}
+
+.dimension-card {
+  display: block;
+  padding: 18px 20px;
+}
+
+.dimension-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dimension-bar {
+  width: 100%;
+  height: 10px;
+  background: #eee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dimension-fill {
+  height: 100%;
+  background: #c58be8;
+  border-radius: 999px;
+}
+
+.advice-card {
+  margin-top: 20px;
+  background: #faf8fc;
+}
+
+.section-img {
+  width: 100%;
+  height: 250px;  /* Add this */
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 20px 0;
+  transition: all 0.4s ease;  /* Changed from height to all */
+}
+
+.section-img:hover {
+  height: auto;  /* Change from fixed 430px */
+  max-height: 430px;  /* Use max-height instead */
+  object-fit: contain;
+  background: #f3f3f3;
+}
+
+
+
+
+
+
+
