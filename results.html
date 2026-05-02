@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TechMind - Results</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="page-container">
@@ -48,6 +49,59 @@
     const resultsContent = document.getElementById("results-content");
     const stored = localStorage.getItem("technomindResult");
 
+    function loadChart(data) {
+      const canvas = document.getElementById("scoreChart");
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Overall Score", "Overload", "Invasion", "Complexity"],
+          datasets: [{
+            label: "Score",
+            data: [
+              data.score,
+              data.dimensions.overload,
+              data.dimensions.invasion,
+              data.dimensions.complexity
+            ],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    function getCategoryColour(category) {
+      if (category === "low") return "#4CAF50";
+      if (category === "medium") return "#FFA500";
+      return "#E53935";
+    }
+
+    function getScoreMeaning(category) {
+      if (category === "low") {
+        return "Your responses suggest a relatively low level of technostress at the moment.";
+      }
+      if (category === "medium") {
+        return "Your responses suggest a moderate level of technostress, meaning some aspects of technology use may be affecting your wellbeing.";
+      }
+      return "Your responses suggest a high level of technostress, meaning technology-related demands may be having a strong impact on your daily experience.";
+    }
+
     if (!stored) {
       resultsContent.innerHTML = `
         <p class="no-result-text">
@@ -56,38 +110,69 @@
       `;
     } else {
       const data = JSON.parse(stored);
+      const categoryColor = getCategoryColour(data.category);
 
       resultsContent.innerHTML = `
         <div class="result-summary">
-          <div class="result-box">
+          <div class="result-box score-box">
             <h2>Overall Score</h2>
-            <p>${data.score}</p>
+            <p class="big-score">${data.score}</p>
+            <small class="result-note">Higher score = higher technostress</small>
           </div>
 
-          <div class="result-box">
+          <div class="result-box category-box">
             <h2>Category</h2>
-            <p>${data.category}</p>
+            <p class="category-value" style="color:${categoryColor}; text-transform:capitalize;">
+              ${data.category}
+            </p>
+            <small class="result-note">Based on your total score</small>
           </div>
         </div>
 
-        <div class="dimension-list">
-          <div class="dimension-item">
-            <span class="dimension-label">Overload</span>
-            <span class="dimension-value">${data.dimensions.overload}</span>
+        <div class="result-explainer">
+          <p class="page-text" style="margin-bottom: 0;">
+            ${getScoreMeaning(data.category)}
+          </p>
+        </div>
+
+        <div class="chart-card">
+          <h2 class="question-title chart-title">Results Overview</h2>
+          <canvas id="scoreChart"></canvas>
+        </div>
+
+        <div class="dimension-list enhanced-dimensions">
+          <div class="dimension-item dimension-card">
+            <div class="dimension-top">
+              <span class="dimension-label">Overload</span>
+              <span class="dimension-value">${data.dimensions.overload}</span>
+            </div>
+            <div class="dimension-bar">
+              <div class="dimension-fill" style="width:${(data.dimensions.overload / 50) * 100}%"></div>
+            </div>
           </div>
 
-          <div class="dimension-item">
-            <span class="dimension-label">Invasion</span>
-            <span class="dimension-value">${data.dimensions.invasion}</span>
+          <div class="dimension-item dimension-card">
+            <div class="dimension-top">
+              <span class="dimension-label">Invasion</span>
+              <span class="dimension-value">${data.dimensions.invasion}</span>
+            </div>
+            <div class="dimension-bar">
+              <div class="dimension-fill" style="width:${(data.dimensions.invasion / 50) * 100}%"></div>
+            </div>
           </div>
 
-          <div class="dimension-item">
-            <span class="dimension-label">Complexity</span>
-            <span class="dimension-value">${data.dimensions.complexity}</span>
+          <div class="dimension-item dimension-card">
+            <div class="dimension-top">
+              <span class="dimension-label">Complexity</span>
+              <span class="dimension-value">${data.dimensions.complexity}</span>
+            </div>
+            <div class="dimension-bar">
+              <div class="dimension-fill" style="width:${(data.dimensions.complexity / 50) * 100}%"></div>
+            </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 20px; background: #faf8fc;">
+        <div class="card advice-card">
           <h2 class="question-title" style="text-align:center; margin-bottom: 15px;">
             Personalised Advice
           </h2>
@@ -107,6 +192,8 @@
           </p>
         </div>
       `;
+
+      loadChart(data);
     }
   </script>
 </body>
