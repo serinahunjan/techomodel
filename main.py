@@ -1,16 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
+import hmac
+import hashlib
+import os
 from fastapi.staticfiles import StaticFiles
+
 from db import (
     init_db,
     save_assessment,
     get_latest_assessment,
+    get_all_assessments,
     save_breakdown,
     save_answers,
     save_screen_time_log,
     get_user_screen_time_logs,
-    delete_screen_time_log
+    delete_screen_time_log,
+    create_user,
+    verify_user
 )
 
 app = FastAPI()
@@ -25,7 +32,38 @@ app.add_middleware(
 
 init_db()
 
-app.mount("/static", StaticFiles(directory="."), name="static")
+SECRET_KEY = "change-this-secret-key"
+
+def create_session_token(email: str) -> str:
+    signature = hmac.new(
+        SECRET_KEY.encode(),
+        email.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    return f"{email}|{signature}"
+
+
+def get_logged_in_user(request: Request):
+    token = request.cookies.get("technomind_session")
+
+    if not token or "|" not in token:
+        return None
+
+    email, signature = token.split("|", 1)
+
+    expected_signature = hmac.new(
+        SECRET_KEY.encode(),
+        email.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(signature, expected_signature):
+        return None
+
+    return email
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def calculate_dimensions_30(answers: list[int]) -> dict:
@@ -119,6 +157,7 @@ def get_personalised_advice(primary_dimension: str, category: str) -> dict:
         }
 
 
+
 @app.get("/")
 def home():
     return FileResponse("index.html")
@@ -135,8 +174,17 @@ def signup_page():
 
 
 @app.get("/assessment")
-def assessment_page():
+def assessment_page(request: Request):
+    if not get_logged_in_user(request):
+        return RedirectResponse("/login")
+    
     return FileResponse("assessment.html")
+
+@app.get("/all-assessments")
+def all_assessments():
+    return {
+        "assessments": get_all_assessments()
+    }
 
 
 @app.get("/results")
@@ -145,8 +193,82 @@ def results_page():
 
 
 @app.get("/journal")
-def journal_page():
+def journal_page(request: Request):
+    if not get_logged_in_user(request):
+        return RedirectResponse("/login")
+    
     return FileResponse("journal.html")
+
+@app.post("/auth/signup")
+def auth_signup(data: dict):
+    required_fields = ["firstName", "lastName", "email", "password"]
+
+    for field in required_fields:
+        if field not in data or not str(data[field]).strip():
+            return JSONResponse(
+                {"error": "Please fill in all fields."},
+                status_code=400
+            )
+
+    try:
+        create_user(
+            first_name=data["firstName"].strip(),
+            last_name=data["lastName"].strip(),
+            email=data["email"].strip(),
+            password=data["password"]
+        )
+
+        return {"message": "Account created successfully"}
+
+    except Exception:
+        return JSONResponse(
+            {"error": "Account could not be created. This email may already exist."},
+            status_code=400
+        )
+
+@app.post("/auth/login")
+def auth_login(data: dict):
+    if "email" not in data or "password" not in data:
+        return JSONResponse(
+            {"error": "Please enter your email and password."},
+            status_code=400
+        )
+
+    user = verify_user(
+        email=data["email"].strip(),
+        password=data["password"]
+    )
+
+    if not user:
+        return JSONResponse(
+            {"error": "Invalid email or password."},
+            status_code=401
+        )
+
+    response = JSONResponse({
+        "message": "Login successful",
+        "user": {
+            "email": user["email"],
+            "firstName": user["first_name"],
+            "lastName": user["last_name"]
+        }
+    })
+
+    response.set_cookie(
+        key="technomind_session",
+        value=create_session_token(user["email"]),
+        httponly=True,
+        samesite="lax"
+    )
+
+    return response
+
+
+@app.post("/auth/logout")
+def auth_logout():
+    response = JSONResponse({"message": "Logged out successfully"})
+    response.delete_cookie("technomind_session")
+    return response
 
 
 @app.post("/submit-survey")
@@ -258,7 +380,6 @@ def remove_screen_time(data: dict):
     return {"message": "Entry deleted successfully"}
 
 
-import os
 
 if __name__ == "__main__":
     import uvicorn
