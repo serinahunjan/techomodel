@@ -62,3 +62,22 @@ async function submitDemo() {
 function goToResults() {
   window.location.href = "/results"; // ✅ FIXED routing
 }
+
+const homepageImages = document.querySelectorAll(".section-img");
+
+const imageObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("expanded");
+      }
+    });
+  },
+  {
+    threshold: 0.4
+  }
+);
+
+homepageImages.forEach((image) => {
+  imageObserver.observe(image);
+});
