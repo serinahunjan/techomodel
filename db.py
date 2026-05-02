@@ -2,6 +2,9 @@ import sqlite3
 from pathlib import Path
 import uuid
 from datetime import datetime
+import hashlib
+import hmac
+import os
 
 DB_PATH = Path(__file__).resolve().parent / ("technomodel.db")
 
@@ -69,11 +72,35 @@ def init_db() -> None:
             UNIQUE(user_email, log_date)
         );
         """)
+        
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                first_name TEXT NOT NULL,
+                last_name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                password_salt TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            """)
+
 
 
 # =========================
 # EXISTING FUNCTIONS
 # =========================
+def get_all_assessments():
+    with get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, created_at, total_score, category
+            FROM assessments
+            ORDER BY created_at DESC
+            """
+        ).fetchall()
+
+        return [dict(row) for row in rows]
 
 def save_assessment(total_score: int, category: str) -> str:
     assessment_id = str(uuid.uuid4())
@@ -216,3 +243,56 @@ def delete_screen_time_log(user_email: str, log_date: str) -> bool:
 if __name__ == "__main__":
     init_db()
     print("Database created / updated successfully.")
+
+def hash_password(password, salt=None):
+    if salt is None:
+        salt = os.urandom(16)
+
+    password_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        100000
+    ).hex()
+
+    return salt.hex(), password_hash
+
+
+def create_user(first_name, last_name, email, password):
+    salt, password_hash = hash_password(password)
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO users (id, first_name, last_name, email, password_salt, password_hash, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            str(uuid.uuid4()),
+            first_name,
+            last_name,
+            email.lower(),
+            salt,
+            password_hash,
+            datetime.utcnow().isoformat()
+        ))
+
+
+def verify_user(email, password):
+    with get_connection() as conn:
+        user = conn.execute("""
+            SELECT * FROM users WHERE email = ?
+        """, (email.lower(),)).fetchone()
+
+        if not user:
+            return None
+
+        _, password_hash = hash_password(password, bytes.fromhex(user["password_salt"]))
+
+        if not hmac.compare_digest(password_hash, user["password_hash"]):
+            return None
+
+        return {
+            "id": user["id"],
+            "first_name": user["first_name"],
+            "last_name": user["last_name"],
+            "email": user["email"]
+        }
